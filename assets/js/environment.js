@@ -3,7 +3,7 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.126.0/build/three.module.js';
 import { scene, player } from './sceneSetup.js';
 import { showMessage } from './main.js';
-import { sendBalloonHit, remotePlayers, playerId, sendPlayerCollision } from './network.js';
+import { sendBalloonHit, remotePlayers, playerId } from './network.js';
 
 let score = 0;
 let difficultyLevel = 1;
@@ -157,8 +157,8 @@ function createBalloon(id) {
 function updateEnvironment() {
     // Dynamic environment updates can be added here in the future
     
-    // Check for player-player collisions in multiplayer
-    checkPlayerCollisions();
+    // Check for bullets hitting remote players
+    checkBulletPlayerCollisions();
 }
 
 // Check collisions between local bullets and balloons
@@ -188,36 +188,55 @@ function checkCollisions(bullets, balloonList) {
     }
 }
 
-// Check for collisions between players
-function checkPlayerCollisions() {
-    // Only check if we have remote players and networking is set up
-    if (!remotePlayers || !playerId) return;
+// Check for bullets hitting remote players
+function checkBulletPlayerCollisions() {
+    // Only check if we're in multiplayer and have our local player set up
+    if (!window.currentPlane || !window.currentPlane.bullets || !remotePlayers) return;
     
-    const COLLISION_THRESHOLD = 15; // Distance for collision
+    const bullets = window.currentPlane.bullets;
+    const COLLISION_THRESHOLD = 15;
     
-    Object.keys(remotePlayers).forEach(remoteId => {
-        const remotePlayerObj = remotePlayers[remoteId].object;
-        const distance = player.position.distanceTo(remotePlayerObj.position);
+    for (let bulletIndex = bullets.length - 1; bulletIndex >= 0; bulletIndex--) {
+        const bullet = bullets[bulletIndex];
         
-        if (distance < COLLISION_THRESHOLD) {
-            // Don't trigger too frequently - could add a cooldown here
+        // Check against each remote player
+        Object.keys(remotePlayers).forEach(remoteId => {
+            if (!remotePlayers[remoteId] || !remotePlayers[remoteId].object) return;
             
-            // Calculate midpoint for explosion effect
-            const collisionPoint = new THREE.Vector3().addVectors(
-                player.position, 
-                remotePlayerObj.position
-            ).multiplyScalar(0.5);
+            const remotePlayerObj = remotePlayers[remoteId].object;
+            const distance = bullet.position.distanceTo(remotePlayerObj.position);
             
-            // Notify server about collision
-            sendPlayerCollision(remoteId, collisionPoint);
-            
-            // Visual and gameplay effects
-            createEnhancedExplosion(collisionPoint);
-            showMessage(`Collision with player ${remoteId.substring(0, 8)}`);
-            
-            // Could implement damage system, speed reduction, etc.
-        }
-    });
+            if (distance < COLLISION_THRESHOLD) {
+                // Hit detected!
+                const hitPosition = bullet.position.clone();
+                
+                // Remove the bullet
+                scene.remove(bullet);
+                bullets.splice(bulletIndex, 1);
+                
+                // Create hit effect
+                createEnhancedExplosion(hitPosition);
+                showMessage(`Hit player ${remotePlayers[remoteId].name || remoteId.substring(0, 8)}`);
+                
+                // Let the server know about the hit
+                const hitData = {
+                    type: 'playerHit',
+                    shooterId: playerId,
+                    targetId: remoteId,
+                    position: {
+                        x: hitPosition.x,
+                        y: hitPosition.y,
+                        z: hitPosition.z
+                    }
+                };
+                
+                // Send using the WebSocket connection in network.js
+                if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                    window.socket.send(JSON.stringify(hitData));
+                }
+            }
+        });
+    }
 }
 
 function updateDifficulty() {
@@ -316,4 +335,4 @@ function createEnhancedExplosion(position) {
     animateFlash();
 }
 
-export {createEnhancedExplosion, balloons, checkCollisions, createEnvironment, difficultyLevel, score, updateEnvironment}
+export { createEnhancedExplosion, balloons, checkCollisions, createEnvironment, difficultyLevel, score, updateEnvironment }

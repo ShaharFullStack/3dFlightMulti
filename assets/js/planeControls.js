@@ -70,82 +70,11 @@ const planeConfigs = {
     }
 };
 
-function createPlane(config) {
-    const planeGroup = new THREE.Group();
-
-    // Plane body
-    const bodyGeo = new THREE.BoxGeometry(config.body.width, config.body.height, config.body.length);
-    const bodyMat = new THREE.MeshPhongMaterial({ color: config.body.color });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    planeGroup.add(body);
-
-    // Nose
-    const noseGeo = new THREE.BoxGeometry(config.nose.width, config.nose.height, config.nose.length);
-    const nose = new THREE.Mesh(noseGeo, bodyMat);
-    nose.position.set(config.nose.position.x, config.nose.position.y, config.nose.position.z);
-    planeGroup.add(nose);
-
-    // Guns
-    config.guns.forEach(gunConfig => {
-        const gunGeo = new THREE.BoxGeometry(gunConfig.width, gunConfig.height, gunConfig.length);
-        const gunMat = new THREE.MeshPhongMaterial({ color: gunConfig.color });
-        const gun = new THREE.Mesh(gunGeo, gunMat);
-        gun.position.set(gunConfig.position.x, gunConfig.position.y, gunConfig.position.z);
-        if (gunConfig.rotationZ) gun.rotation.z = gunConfig.rotationZ;
-        planeGroup.add(gun);
-    });
-
-    // Wings
-    const wingGeo = new THREE.BoxGeometry(config.wing.width, config.wing.height, config.wing.length);
-    const wingMat = new THREE.MeshPhongMaterial({ color: config.wing.color });
-    const wings = new THREE.Mesh(wingGeo, wingMat);
-    wings.position.set(config.wing.position.x, config.wing.position.y, config.wing.position.z);
-    planeGroup.add(wings);
-
-    // Tail
-    const tailWingGeo = new THREE.BoxGeometry(config.tailWing.width, config.tailWing.height, config.tailWing.length);
-    const tailWing = new THREE.Mesh(tailWingGeo, wingMat);
-    tailWing.position.set(config.tailWing.position.x, config.tailWing.position.y, config.tailWing.position.z);
-    planeGroup.add(tailWing);
-
-    // Stabilizers
-    const stabilizerGeo = new THREE.BoxGeometry(config.stabilizer.width, config.stabilizer.height, config.stabilizer.length);
-    const stabilizer = new THREE.Mesh(stabilizerGeo, wingMat);
-    stabilizer.position.set(config.stabilizer.position.x, config.stabilizer.position.y, config.stabilizer.position.z);
-    planeGroup.add(stabilizer);
-
-    // Windows
-    const windowGeo = new THREE.BoxGeometry(config.windows.width, config.windows.height, config.windows.length);
-    const windowMat = new THREE.MeshPhongMaterial({
-        color: config.windows.color,
-        transparent: true,
-        opacity: config.windows.opacity
-    });
-    const windows = new THREE.Mesh(windowGeo, windowMat);
-    windows.position.set(config.windows.position.x, config.windows.position.y, config.windows.position.z);
-    planeGroup.add(windows);
-
-    // Wheels
-    const wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 8);
-    const wheelMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
-    config.wheels.forEach(pos => {
-        const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-        wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(pos.x, pos.y, pos.z);
-        planeGroup.add(wheel);
-    });
-
-    // Scale the plane
-    planeGroup.scale.set(config.scale.x, config.scale.y, config.scale.z);
-
-    return planeGroup;
-}
-
 class Plane {
     constructor(type) {
         this.type = type;
         this.config = planeConfigs[type];
-        this.group = createPlane(this.config);
+        this.group = this.createPlane(this.config);
         this.speed = 0;
         this.maxSpeed = 2.0;
         this.speedIncrement = 0.1;
@@ -163,10 +92,138 @@ class Plane {
         this.shootCooldown = 100;
         this.bulletSpeed = 5;
         
-        // Multiplayer additions
-        this.health = 100; // Health points for multiplayer damage system
-        this.isInvulnerable = false; // For respawn protection
+        // Health system
+        this.health = 100;
+        this.isInvulnerable = false;
         this.respawnProtectionTime = 3000; // 3 seconds of invulnerability after respawn
+        this.healthBar = this.createHealthBar();
+        this.group.add(this.healthBar);
+        this.healthBar.position.set(0, 10, 0);
+    }
+
+    createPlane(config) {
+        const planeGroup = new THREE.Group();
+
+        // Plane body
+        const bodyGeo = new THREE.BoxGeometry(config.body.width, config.body.height, config.body.length);
+        const bodyMat = new THREE.MeshPhongMaterial({ color: config.body.color });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        planeGroup.add(body);
+
+        // Nose
+        const noseGeo = new THREE.BoxGeometry(config.nose.width, config.nose.height, config.nose.length);
+        const nose = new THREE.Mesh(noseGeo, bodyMat);
+        nose.position.set(config.nose.position.x, config.nose.position.y, config.nose.position.z);
+        planeGroup.add(nose);
+
+        // Guns
+        config.guns.forEach(gunConfig => {
+            const gunGeo = new THREE.BoxGeometry(gunConfig.width, gunConfig.height, gunConfig.length);
+            const gunMat = new THREE.MeshPhongMaterial({ color: gunConfig.color });
+            const gun = new THREE.Mesh(gunGeo, gunMat);
+            gun.position.set(gunConfig.position.x, gunConfig.position.y, gunConfig.position.z);
+            if (gunConfig.rotationZ) gun.rotation.z = gunConfig.rotationZ;
+            planeGroup.add(gun);
+        });
+
+        // Wings
+        const wingGeo = new THREE.BoxGeometry(config.wing.width, config.wing.height, config.wing.length);
+        const wingMat = new THREE.MeshPhongMaterial({ color: config.wing.color });
+        const wings = new THREE.Mesh(wingGeo, wingMat);
+        wings.position.set(config.wing.position.x, config.wing.position.y, config.wing.position.z);
+        planeGroup.add(wings);
+
+        // Tail
+        const tailWingGeo = new THREE.BoxGeometry(config.tailWing.width, config.tailWing.height, config.tailWing.length);
+        const tailWing = new THREE.Mesh(tailWingGeo, wingMat);
+        tailWing.position.set(config.tailWing.position.x, config.tailWing.position.y, config.tailWing.position.z);
+        planeGroup.add(tailWing);
+
+        // Stabilizers
+        const stabilizerGeo = new THREE.BoxGeometry(config.stabilizer.width, config.stabilizer.height, config.stabilizer.length);
+        const stabilizer = new THREE.Mesh(stabilizerGeo, wingMat);
+        stabilizer.position.set(config.stabilizer.position.x, config.stabilizer.position.y, config.stabilizer.position.z);
+        planeGroup.add(stabilizer);
+
+        // Windows
+        const windowGeo = new THREE.BoxGeometry(config.windows.width, config.windows.height, config.windows.length);
+        const windowMat = new THREE.MeshPhongMaterial({
+            color: config.windows.color,
+            transparent: true,
+            opacity: config.windows.opacity
+        });
+        const windows = new THREE.Mesh(windowGeo, windowMat);
+        windows.position.set(config.windows.position.x, config.windows.position.y, config.windows.position.z);
+        planeGroup.add(windows);
+
+        // Wheels
+        const wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 8);
+        const wheelMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
+        config.wheels.forEach(pos => {
+            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+            wheel.rotation.z = Math.PI / 2;
+            wheel.position.set(pos.x, pos.y, pos.z);
+            planeGroup.add(wheel);
+        });
+
+        // Scale the plane
+        planeGroup.scale.set(config.scale.x, config.scale.y, config.scale.z);
+
+        return planeGroup;
+    }
+
+    // Create a health bar for the plane
+    createHealthBar() {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 100;
+        canvas.height = 10;
+        
+        // Background
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Health fill
+        context.fillStyle = '#00ff00';
+        context.fillRect(2, 2, 96, 6);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        const material = new THREE.SpriteMaterial({ map: texture });
+        const sprite = new THREE.Sprite(material);
+        sprite.scale.set(15, 2, 1);
+        
+        return sprite;
+    }
+
+    // Update the health bar based on current health
+    updateHealthBar() {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 100;
+        canvas.height = 10;
+        
+        // Background
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Health fill - color changes based on health level
+        let fillColor;
+        if (this.health > 60) {
+            fillColor = '#00ff00'; // Green
+        } else if (this.health > 30) {
+            fillColor = '#ffff00'; // Yellow
+        } else {
+            fillColor = '#ff0000'; // Red
+        }
+        
+        context.fillStyle = fillColor;
+        context.fillRect(2, 2, Math.max(0, this.health * 0.96), 6); // Width based on health percentage
+        
+        // Update the texture
+        const texture = new THREE.CanvasTexture(canvas);
+        this.healthBar.material.map.dispose();
+        this.healthBar.material.map = texture;
+        this.healthBar.material.needsUpdate = true;
     }
 
     update(keys) {
@@ -306,6 +363,9 @@ class Plane {
         
         this.health -= amount;
         
+        // Update health bar
+        this.updateHealthBar();
+        
         // Visual feedback
         this.flashDamage();
         
@@ -369,6 +429,9 @@ class Plane {
         // Reset health and speed
         this.health = 100;
         this.speed = 0;
+        
+        // Update health bar
+        this.updateHealthBar();
         
         // Set invulnerability
         this.isInvulnerable = true;

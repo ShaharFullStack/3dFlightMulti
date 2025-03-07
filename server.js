@@ -52,10 +52,13 @@ wss.on('connection', (ws) => {
   // Initial player setup
   players[playerId] = {
     id: playerId,
+    name: `Player ${Object.keys(players).length + 1}`, // Default name until player sets it
     position: { x: 2, y: 8, z: 50 },
     quaternion: { _x: 0, _y: 0, _z: 0, _w: 1 },
     planeType: 'planeOne',
+    planeConfig: null, // Will be set when player sends info
     score: 0,
+    health: 100,
     bullets: []
   };
   
@@ -81,12 +84,34 @@ wss.on('connection', (ws) => {
       const data = JSON.parse(message);
       
       switch (data.type) {
+        case 'playerInfo':
+          // Update player info (name, plane type, plane config)
+          if (players[playerId]) {
+            players[playerId].name = data.name || players[playerId].name;
+            players[playerId].planeType = data.planeType || players[playerId].planeType;
+            players[playerId].planeConfig = data.planeConfig || players[playerId].planeConfig;
+            
+            // Broadcast updated player info to all players
+            broadcastToAll({
+              type: 'playerUpdate',
+              playerId: playerId,
+              name: players[playerId].name,
+              planeType: players[playerId].planeType,
+              planeConfig: players[playerId].planeConfig
+            });
+            
+            console.log(`Player ${playerId} set name to: ${players[playerId].name}`);
+          }
+          break;
+          
         case 'playerUpdate':
           // Update player position and orientation
           if (players[data.playerId]) {
             players[data.playerId].position = data.position;
             players[data.playerId].quaternion = data.quaternion;
             players[data.playerId].planeType = data.planeType;
+            players[data.playerId].planeConfig = data.planeConfig;
+            players[data.playerId].health = data.health;
             
             // Broadcast player update to all other players
             broadcastToAllExcept(data, data.playerId);
@@ -159,14 +184,46 @@ wss.on('connection', (ws) => {
             }
           }
           break;
-
-        case 'playerCollision':
-          // Handle player-to-player collisions if implemented
-          broadcastToAll({
-            type: 'playerCollision',
-            players: [data.player1Id, data.player2Id],
-            position: data.position
-          });
+          
+        case 'playerHit':
+          // Handle player hit by bullet
+          const targetPlayerId = data.targetId;
+          const shooterId = data.shooterId;
+          
+          if (players[targetPlayerId] && players[shooterId]) {
+            // Reduce health by 5
+            players[targetPlayerId].health -= 5;
+            if (players[targetPlayerId].health < 0) {
+              players[targetPlayerId].health = 0;
+            }
+            
+            // Broadcast hit information to all players
+            broadcastToAll({
+              type: 'playerHit',
+              targetId: targetPlayerId,
+              shooterId: shooterId,
+              position: data.position,
+              newHealth: players[targetPlayerId].health
+            });
+            
+            console.log(`Player ${shooterId} hit player ${targetPlayerId}. New health: ${players[targetPlayerId].health}`);
+            
+            // If health reached 0, handle death (respawn handled client-side)
+            if (players[targetPlayerId].health <= 0) {
+              console.log(`Player ${targetPlayerId} was destroyed by ${shooterId}`);
+              
+              // Reset health to full for respawn
+              players[targetPlayerId].health = 100;
+              
+              // Broadcast death event
+              broadcastToAll({
+                type: 'playerKilled',
+                targetId: targetPlayerId,
+                shooterId: shooterId,
+                position: data.position
+              });
+            }
+          }
           break;
       }
     } catch (error) {
