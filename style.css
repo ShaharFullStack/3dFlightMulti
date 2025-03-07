@@ -1,0 +1,374 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+#altitude, #score, #crash, #difficulty, #connection-status {
+    position: absolute;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    z-index: 9999;
+}
+
+#altitude {
+    top: 10px;
+    left: 10px;
+}
+
+#score {
+    top: 50px;
+    left: 10px;
+}
+
+#difficulty {
+    top: 90px;
+    left: 10px;
+}
+
+#connection-status {
+    top: 130px;
+    left: 10px;
+}
+
+#crash {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+}
+
+#planeSelection {
+    position: absolute;
+    top: 10px;
+    left: 150px;
+    z-index: 9999;
+}
+
+#planeSelection button {
+    display: block;
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* Multiplayer specific styles */
+#multiplayer-scoreboard {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    min-width: 200px;
+    z-index: 100;
+}
+
+#multiplayer-scoreboard table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#multiplayer-scoreboard th, 
+#multiplayer-scoreboard td {
+    padding: 3px 5px;
+    text-align: left;
+}
+
+#multiplayer-scoreboard th {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#chatOverlay {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 300px;
+    height: 200px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+    z-index: 1000;
+}
+
+#chatMessages {
+    height: 150px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+#chatMessages div {
+    margin-bottom: 5px;
+    word-wrap: break-word;
+}
+
+#chatInput {
+    width: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 3px;
+}
+
+#chatInput::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.player-name-tag {
+    position: absolute;
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 2px;
+    transform: translate(-50%, -100%);
+    white-space: nowrap;
+}
+
+/* Notification styles */
+.notification {
+    position: fixed;
+    top: 70px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Player health bar */
+.health-bar-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.health-bar {
+    height: 100%;
+    background-color: #00ff00;
+    width: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.health-bar.warning {
+    background-color: #ffff00;
+}
+
+.health-bar.danger {
+    background-color: #ff0000;
+}
+
+/* Multiplayer status badge */
+.multiplayer-badge {
+    position: fixed;
+    top: 45px;
+    right: 10px;
+    background-color: rgba(0, 150, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    z-index: 100;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #altitude, #score, #difficulty, #connection-status {
+        font-size: 14px;
+        padding: 5px;
+    }
+    
+    #chatOverlay {
+        width: 250px;
+        height: 180px;
+    }
+    
+    #chatMessages {
+        height: 130px;
+    }
+    
+    #multiplayer-scoreboard {
+        max-width: 180px;
+        font-size: 12px;
+    }
+    
+    .health-bar-container {
+        width: 150px;
+        height: 12px;
+    }
+}
+
+/* Loading screen styles */
+#loading-screen {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#loading-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #0f0;
+    transition: width 0.3s;
+}
+
+#start-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #0f0;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: none;
+}
+
+#start-button:hover {
+    background-color: #00cc00;
+}
+
+/* Explosion effects */
+.explosion-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid yellow;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Player damage effect */
+.damage-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* Kill feed */
+#kill-feed {
+    position: absolute;
+    left: 10px;
+    bottom: 80px;
+    width: 250px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+}
+
+#kill-feed .kill-message {
+    margin-bottom: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px;
+    border-radius: 3px;
+    animation: fadeOut 5s forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Player respawn countdown */
+.respawn-countdown {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+    font-weight: bold;
+    z-index: 1000;
+}
+
+/* Player list for spectator mode */
+#player-list {
+    position: absolute;
+    left: 10px;
+    top: 170px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    max-width: 200px;
+    z-index: 100;
+}
+
+#player-list h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
+}
+
+#player-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#player-list li {
+    padding: 3px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+#player-list .spectate-button {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    margin-left: 5px;
+}
+
+#player-list .spectate-button:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}

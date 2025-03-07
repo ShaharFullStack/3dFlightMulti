@@ -1,0 +1,20 @@
+{
+    "name": "balloon-fighter-multiplayer",
+    "version": "1.0.0",
+    "description": "Multiplayer balloon fighter game",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js",
+      "dev": "nodemon server.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+      "express": "^4.17.3",
+      "uuid": "^8.3.2",
+      "ws": "^8.5.0"
+    },
+    "devDependencies": {
+      "nodemon": "^2.0.15"
+    }
+  }
