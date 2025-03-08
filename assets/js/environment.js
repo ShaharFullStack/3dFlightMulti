@@ -133,21 +133,49 @@ function isInRunwayZone(x, z) {
     return (x >= runwayMinX && x <= runwayMaxX && z >= runwayMinZ && z <= runwayMaxZ);
 }
 
-function createBalloon(id) {
+function createBalloon(balloonData) {
     const balloonGeometry = new THREE.SphereGeometry(6, 16, 16);
+    
+    // Use the balloon color from server data or generate a random one
+    const balloonColor = (typeof balloonData === 'object' && balloonData.color) 
+        ? balloonData.color 
+        : new THREE.Color(Math.random(), Math.random(), Math.random());
+        
     const balloonMaterial = new THREE.MeshLambertMaterial({
-        color: new THREE.Color(Math.random(), Math.random(), Math.random())
+        color: balloonColor
     });
+    
     const balloon = new THREE.Mesh(balloonGeometry, balloonMaterial);
     balloon.castShadow = true;
-    balloon.position.set(
-        (Math.random() - 0.5) * 2500,
-        10 + Math.random() * 1500,
-        (Math.random() - 0.5) * 1000
-    );
+    
+    // Use position from server data or generate random position
+    if (typeof balloonData === 'object' && balloonData.position) {
+        balloon.position.set(
+            balloonData.position.x,
+            balloonData.position.y,
+            balloonData.position.z
+        );
+    } else {
+        balloon.position.set(
+            (Math.random() - 0.5) * 2500,
+            10 + Math.random() * 1500,
+            (Math.random() - 0.5) * 1000
+        );
+    }
     
     // Add unique ID to the balloon for multiplayer tracking
-    balloon.userData.id = id || `balloon-${Date.now()}-${Math.random()}`;
+    const balloonId = (typeof balloonData === 'object' && balloonData.id) 
+        ? balloonData.id 
+        : (typeof balloonData === 'string' ? balloonData : `balloon-${Date.now()}-${Math.random()}`);
+        
+    balloon.userData.id = balloonId;
+    
+    // Set active state if provided
+    if (typeof balloonData === 'object' && balloonData.hasOwnProperty('active')) {
+        balloon.userData.active = balloonData.active;
+    } else {
+        balloon.userData.active = true;
+    }
     
     scene.add(balloon);
     balloons.push(balloon);
@@ -335,4 +363,4 @@ function createEnhancedExplosion(position) {
     animateFlash();
 }
 
-export { createEnhancedExplosion, balloons, checkCollisions, createEnvironment, difficultyLevel, score, updateEnvironment }
+export { createEnhancedExplosion, balloons, checkCollisions, createEnvironment, difficultyLevel, score, updateEnvironment, createBalloon }

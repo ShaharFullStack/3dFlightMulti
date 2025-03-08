@@ -32,16 +32,22 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => keys[e.key] = false);
 
+// Update to the toggleMultiplayer function in main.js
+
 // Multiplayer toggle function
 function toggleMultiplayer() {
     if (!multiplayerEnabled) {
+        // Connect to multiplayer
         initializeMultiplayer();
         multiplayerEnabled = true;
         showMessage("מצב מרובה משתתפים: מופעל");
+        document.getElementById('multiplayer-status').style.display = 'block';
     } else {
+        // Disconnect from multiplayer
         disconnectFromMultiplayer();
         multiplayerEnabled = false;
         showMessage("מצב מרובה משתתפים: מבוטל");
+        document.getElementById('multiplayer-status').style.display = 'none';
     }
 }
 
@@ -54,8 +60,13 @@ function initializeMultiplayer() {
 
 // Disconnect from multiplayer
 function disconnectFromMultiplayer() {
-    // Close connection and clean up
-    // This would be implemented in network.js
+    // Use the new disconnectFromServer function from network.js
+    // to properly close the connection without triggering auto-reconnect
+    if (typeof disconnectFromServer === 'function') {
+        disconnectFromServer();
+    }
+    
+    // Clean up UI elements
     removeScoreboard();
 }
 
@@ -72,7 +83,7 @@ function showMessage(message) {
     messageDiv.style.position = 'absolute';
     messageDiv.style.top = '20%';
     messageDiv.style.left = '10%';
-    messageDiv.style.backgroundColor = 'white';
+    messageDiv.style.backgroundColor = 'black';
     messageDiv.style.padding = '30px';
     messageDiv.style.fontSize = '34px';
     messageDiv.style.borderRadius = '5px';

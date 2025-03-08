@@ -3,10 +3,10 @@
 import { showMessage } from './main.js';
 
 const musicTracks = [
+    'assets/music/Scratch Dog.mp3',
     'assets/music/Dog Trap.mp3',
     'assets/music/Slow J-Dog.mp3',
     'assets/music/Trapdog.mp3',
-    'assets/music/Scratch Dog.mp3',
     'assets/music/Dogbalism.mp3',
     'assets/music/Dogfight.mp3',
     'assets/music/Hip Dog.mp3',
